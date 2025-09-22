@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tryout Online HSK 4 KUSUMA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:linear-gradient(135deg, #b1e3f7 0%, #dd9f4e 100%);
+            min-height: 100vh;
+        }
+
+        body.exam-mode {
+            background: #000;
+            overflow: auto;
+        }
+
+        .welcome-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .welcome-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            animation: slideIn 1s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .exam-info {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            border-left: 5px solid #4ecdc4;
+        }
+
+        .exam-info h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .info-value {
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            padding: 1.2rem 3rem;
+            font-size: 1.3rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(78, 205, 196, 0.4);
+        }
+
+        .warning-box {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .warning-box h4 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .warning-list {
+            list-style: none;
+            text-align: left;
+        }
+
+        .warning-list li {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .warning-list li:before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+        }
+
+        /* Exam Screen Styles */
+        .exam-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 1000;
+        }
+
+        .exam-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1001;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .timer-display {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .exam-status {
+            font-size: 1.1rem;
+            color: #ecf0f1;
+        }
+
+        .exam-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .control-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .end-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .end-btn:hover {
+            background: #c0392b;
+        }
+
+        .exam-frame {
+            position: absolute;
+            top: 80px;
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 80px);
+            border: none;
+            background: white;
+            overflow: auto;
+        }
+
+        /* Warning Overlay */
+        .warning-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            text-align: center;
+            flex-direction: column;
+        }
+
+        .warning-content {
+            background: rgba(255,255,255,0.1);
+            padding: 3rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .warning-title {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .unlock-form {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .unlock-input {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: #f8f9fa;
+            border: 3px solid #ddd;
+        }
+
+        .unlock-input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+
+        .unlock-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .error-message {
+            background: #e74c3c;
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .violation-count {
+            background: #e74c3c;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            margin-left: 1rem;
+        }
+
+        /* Disable text selection but allow scrolling */
+        .exam-screen * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Allow scrolling in iframe */
+        #examFrame {
+            overflow: auto !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-container">
+            <h1 class="welcome-title">🎓 Tryout Online</h1>
+            <p class="welcome-subtitle">Sistem Tryout dengan monitoring ketat dan timer otomatis</p>
+            
+            <div class="exam-info">
+                <h3>📋 Informasi Ujian</h3>
+                <div class="info-item">
+                    <span class="info-label">Durasi Ujian:</span>
+                    <span class="info-value" id="durationInfo">60 Menit</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Mode:</span>
+                    <span class="info-value">Fullscreen Terkunci</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Monitoring:</span>
+                    <span class="info-value">Ketat & Real-time</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value">Siap Dimulai</span>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ PERHATIAN PENTING:</h4>
+                <ul class="warning-list">
+                    <li>Ujian akan berjalan dalam mode fullscreen</li>
+                    <li>Tidak dapat keluar hingga ujian selesai</li>
+                    <li>Keluar dari aplikasi akan memblokir akses</li>
+                    <li>Shortcut keyboard akan diblokir</li>
+                    <li>Pelanggaran akan dicatat sistem</li>
+                </ul>
+            </div>
+
+            <button class="start-btn" onclick="startExamFullscreen()">
+                🚀 MULAI UJIAN
+            </button>
+        </div>
+    </div>
+
+    <!-- Exam Screen -->
+    <div class="exam-screen" id="examScreen">
+        <div class="exam-header">
+            <div class="exam-status">
+                📚 Ujian Online - Mode Terkunci 
+                <span class="violation-count" id="violationCount">Pelanggaran: 0</span>
+            </div>
+            <div class="timer-display" id="timerDisplay">⏰ Loading...</div>
+            <div class="exam-controls">
+                <button class="control-btn end-btn" onclick="endExam()">🏁 Selesai</button>
+            </div>
+        </div>
+        <iframe id="examFrame" class="exam-frame" src=""></iframe>
+    </div>
+
+    <!-- Warning Overlay -->
+    <div class="warning-overlay" id="warningOverlay">
+        <div class="warning-content">
+            <div class="warning-title">🚫 DIBLOKIR!</div>
+            <h3 id="blockReason">Anda keluar dari aplikasi ujian</h3>
+            <div class="unlock-form">
+                <input type="password" class="unlock-input" id="unlockInput" 
+                       placeholder="Masukkan kode pembuka..." maxlength="20">
+                <button class="unlock-btn" onclick="unlockApp()">🔓 BUKA BLOKIR</button>
+                <div class="error-message" id="errorMessage">
+                    Kode salah! Silakan coba lagi.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================================
+        // PENGATURAN UJIAN (EDIT DI SINI)
+        // ================================
+        const EXAM_CONFIG = {
+            // Durasi ujian dalam menit
+            DURATION_MINUTES: 90,
+            
+            // URL Google Form (ganti dengan URL form Anda)
+            GOOGLE_FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSeYOUR_FORM_ID_HERE/viewform?embedded=true",
+            
+            // Kode untuk membuka blokir (ganti sesuai kebutuhan)
+            UNLOCK_CODE: "KUSUMAHSK4",
+            
+            // Pesan peringatan kustom
+            EXAM_TITLE: "Tryout Online - HSK 4",
+            
+            // Mode strict (true = lebih ketat)
+            STRICT_MODE: true
+        };
+
+        // ================================
+        // VARIABEL GLOBAL - JANGAN DIUBAH
+        // ================================
+        let examTimer;
+        let timeRemaining = 0;
+        let isExamActive = false;
+        let isBlocked = false;
+        let violations = 0;
+        let examStartTime;
+        let isFullscreen = false;
+
+        // ================================
+        // INISIALISASI APLIKASI
+        // ================================
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+            preventRightClick();
+            updateExamInfo();
+        });
+
+        function initializeApp() {
+            console.log('Sistem ujian online dimuat');
+            document.title = EXAM_CONFIG.EXAM_TITLE;
+            
+            // Disable F12 and other shortcuts immediately
+            disableShortcuts();
+        }
+
+        function updateExamInfo() {
+            document.getElementById('durationInfo').textContent = EXAM_CONFIG.DURATION_MINUTES + ' Menit';
+        }
+
+        function setupEventListeners() {
+            // Fullscreen change detection
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            
+            // Visibility change detection
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            
+            // Window focus/blur detection
+            window.addEventListener('blur', handleWindowBlur);
+            window.addEventListener('focus', handleWindowFocus);
+            
+            // Keyboard shortcuts prevention
+            document.addEventListener('keydown', preventShortcuts);
+            
+            // Mouse events prevention
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            
+            // Before unload warning
+            window.addEventListener('beforeunload', handleBeforeUnload);
+            
+            // Mobile touch prevention
+            document.addEventListener('touchstart', handleTouch, { passive: false });
+        }
+
+        function disableShortcuts() {
+            // Block common shortcuts immediately
+            document.addEventListener('keydown', function(e) {
+                // F12, Ctrl+Shift+I, Ctrl+U, F5, etc.
+                if (e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key.toUpperCase())) ||
+                    (e.ctrlKey && ['U', 'R', 'S', 'A'].includes(e.key.toUpperCase())) ||
+                    e.key === 'F5' ||
+                    (e.altKey && e.key === 'Tab')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+        }
+
+        // ================================
+        // FUNGSI UJIAN UTAMA
+        // ================================
+        function startExamFullscreen() {
+            // Masuk fullscreen
+            enterFullscreen().then(() => {
+                // Start exam setelah fullscreen
+                setTimeout(() => {
+                    startExam();
+                }, 500);
+            }).catch(err => {
+                alert('Gagal masuk fullscreen. Ujian tetap dimulai.');
+                startExam();
+            });
+        }
+
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            
+            return new Promise((resolve, reject) => {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().then(resolve).catch(reject);
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                    resolve();
+                } else if (elem.mozRequestFullScreen) {
+                    elem.mozRequestFullScreen();
+                    resolve();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                    resolve();
+                } else {
+                    reject('Fullscreen not supported');
+                }
+            });
+        }
+
+        function startExam() {
+            // Set exam state
+            isExamActive = true;
+            isFullscreen = true;
+            examStartTime = Date.now();
+            timeRemaining = EXAM_CONFIG.DURATION_MINUTES * 60;
+            
+            // Change body class
+            document.body.classList.add('exam-mode');
+            
+            // Hide welcome, show exam
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('examScreen').style.display = 'block';
+            
+            // Load Google Form
+            document.getElementById('examFrame').src = EXAM_CONFIG.GOOGLE_FORM_URL;
+            
+            // Start timer
+            examTimer = setInterval(updateTimer, 1000);
+            
+            // Enable strict monitoring
+            enableStrictMonitoring();
+            
+            console.log('Ujian dimulai - Monitoring aktif');
+        }
+
+        function updateTimer() {
+            if (timeRemaining <= 0) {
+                endExam();
+                return;
+            }
+
+            const hours = Math.floor(timeRemaining / 3600);
+            const minutes = Math.floor((timeRemaining % 3600) / 60);
+            const seconds = timeRemaining % 60;
+            
+            let display = '';
+            if (hours > 0) {
+                display = `⏰ ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                display = `⏰ ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            document.getElementById('timerDisplay').textContent = display;
+
+            // Warning colors
+            if (timeRemaining <= 300) { // 5 minutes
+                document.getElementById('timerDisplay').style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+            } else if (timeRemaining <= 600) { // 10 minutes
+                document.getElementById('timerDisplay').style.background = 'linear-gradient(45deg, #f39c12, #e67e22)';
+            }
+
+            timeRemaining--;
+        }
+
+        function endExam() {
+            isExamActive = false;
+            
+            if (examTimer) {
+                clearInterval(examTimer);
+            }
+            
+            // Calculate exam duration
+            const totalTime = Math.round((Date.now() - examStartTime) / 1000);
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            
+            // Exit fullscreen
+            exitFullscreen();
+            
+            // Show completion message
+            alert(`UJIAN SELESAI!\n\nWaktu yang digunakan: ${minutes} menit ${seconds} detik\nTotal Pelanggaran: ${violations}\n\nTerima kasih telah mengikuti ujian.`);
+            
+            // Reset application
+            resetApp();
+        }
+
+        function exitFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+
+        // ================================
+        // SISTEM MONITORING DAN BLOKIR
+        // ================================
+        function enableStrictMonitoring() {
+            // Additional monitoring for strict mode
+            if (EXAM_CONFIG.STRICT_MODE) {
+                // Monitor mouse movements
+                document.addEventListener('mouseout', function(e) {
+                    if (e.relatedTarget === null && isExamActive && !isBlocked) {
+                        triggerBlock('Mouse keluar dari window');
+                    }
+                });
+                
+                // Monitor console usage
+                monitorConsole();
+            }
+        }
+
+        function handleFullscreenChange() {
+            const isCurrentlyFullscreen = !!(document.fullscreenElement || 
+                                           document.webkitFullscreenElement || 
+                                           document.mozFullScreenElement);
+            
+            if (isExamActive && !isCurrentlyFullscreen && !isBlocked) {
+                triggerBlock('Keluar dari mode fullscreen');
+            }
+        }
+
+        function handleVisibilityChange() {
+            if (isExamActive && document.hidden && !isBlocked) {
+                triggerBlock('Tab/Window disembunyikan');
+            }
+        }
+
+        function handleWindowBlur() {
+            if (isExamActive && !isBlocked) {
+                triggerBlock('Window kehilangan fokus');
+            }
+        }
+
+        function handleWindowFocus() {
+            // Log when window regains focus
+            if (isExamActive && !isBlocked) {
+                console.log('Window fokus kembali');
+            }
+        }
+
+        function handleTouch(e) {
+            // Prevent multi-touch on mobile
+            if (e.touches.length > 1 && isExamActive) {
+                e.preventDefault();
+                triggerBlock('Multi-touch terdeteksi');
+            }
+        }
+
+        function preventShortcuts(e) {
+            if (!isExamActive) return;
+            
+            const forbiddenKeys = [
+                'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
+                'PrintScreen', 'ScrollLock', 'Pause'
+            ];
+            
+            // Block function keys
+            if (forbiddenKeys.includes(e.key)) {
+                e.preventDefault();
+                triggerBlock(`Shortcut terlarang: ${e.key}`);
+                return false;
+            }
+            
+            // Block Ctrl combinations
+            if (e.ctrlKey && ['r', 'R', 'u', 'U', 'i', 'I', 's', 'S', 'a', 'A', 'c', 'C', 'v', 'V', 'x', 'X', 'z', 'Z', 'y', 'Y'].includes(e.key)) {
+                e.preventDefault();
+                triggerBlock(`Ctrl+${e.key.toUpperCase()} diblokir`);
+                return false;
+            }
+            
+            // Block Ctrl+Shift combinations
+            if (e.ctrlKey && e.shiftKey && ['i', 'I', 'c', 'C', 'j', 'J', 'k', 'K'].includes(e.key)) {
+                e.preventDefault();
+                triggerBlock(`Developer tools shortcut diblokir`);
+                return false;
+            }
+            
+            // Block Alt+Tab
+            if (e.altKey && e.key === 'Tab') {
+                e.preventDefault();
+                triggerBlock('Alt+Tab diblokir');
+                return false;
+            }
+            
+            // Block Windows key
+            if (e.key === 'Meta' || e.key === 'OS') {
+                e.preventDefault();
+                triggerBlock('Windows key diblokir');
+                return false;
+            }
+        }
+
+        function preventRightClick() {
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                if (isExamActive) {
+                    triggerBlock('Right-click diblokir');
+                }
+                return false;
+            });
+        }
+
+        function handleBeforeUnload(e) {
+            if (isExamActive) {
+                e.preventDefault();
+                e.returnValue = 'Ujian masih berlangsung!';
+                triggerBlock('Mencoba keluar dari halaman');
+                return e.returnValue;
+            }
+        }
+
+        function monitorConsole() {
+            // Simple console monitoring
+            let devtools = false;
+            setInterval(() => {
+                const start = performance.now();
+                debugger;
+                const end = performance.now();
+                
+                if (end - start > 100 && !devtools && isExamActive) {
+                    devtools = true;
+                    triggerBlock('Developer Console terdeteksi');
+                }
+            }, 1000);
+        }
+
+        // ================================
+        // SISTEM BLOKIR DAN UNLOCK
+        // ================================
+        function triggerBlock(reason) {
+            if (isBlocked) return;
+            
+            isBlocked = true;
+            violations++;
+            
+            // Update violation counter
+            document.getElementById('violationCount').textContent = `Pelanggaran: ${violations}`;
+            
+            // Pause timer
+            if (examTimer) {
+                clearInterval(examTimer);
+            }
+            
+            // Show warning overlay
+            document.getElementById('blockReason').textContent = reason;
+            document.getElementById('warningOverlay').style.display = 'flex';
+            
+            // Play warning sound
+            playWarningSound();
+            
+            console.log(`BLOKIR: ${reason} - Violation #${violations}`);
+        }
+
+        function unlockApp() {
+            const inputCode = document.getElementById('unlockInput').value.trim();
+            const errorDiv = document.getElementById('errorMessage');
+            
+            if (inputCode === EXAM_CONFIG.UNLOCK_CODE) {
+                // Unlock successful
+                isBlocked = false;
+                document.getElementById('warningOverlay').style.display = 'none';
+                document.getElementById('unlockInput').value = '';
+                errorDiv.style.display = 'none';
+                
+                // Resume timer
+                if (isExamActive && timeRemaining > 0) {
+                    examTimer = setInterval(updateTimer, 1000);
+                }
+                
+                // Return to fullscreen
+                enterFullscreen();
+                
+                console.log('Blokir dibuka - Ujian dilanjutkan');
+            } else {
+                // Wrong code
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = `Kode salah! Percobaan ke-${violations + 1}`;
+                document.getElementById('unlockInput').value = '';
+                
+                // Add extra violation for wrong code
+                violations++;
+                document.getElementById('violationCount').textContent = `Pelanggaran: ${violations}`;
+            }
+        }
+
+        function playWarningSound() {
+            // Create warning beep
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 1);
+            } catch (e) {
+                console.log('Audio warning tidak dapat dimainkan');
+            }
+        }
+
+        // ================================
+        // RESET APLIKASI
+        // ================================
+        function resetApp() {
+            // Reset all variables
+            isExamActive = false;
+            isBlocked = false;
+            violations = 0;
+            timeRemaining = 0;
+            isFullscreen = false;
+            
+            // Clear timer
+            if (examTimer) {
+                clearInterval(examTimer);
+            }
+            
+            // Reset UI
+            document.body.classList.remove('exam-mode');
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+            document.getElementById('examScreen').style.display = 'none';
+            document.getElementById('warningOverlay').style.display = 'none';
+            document.getElementById('violationCount').textContent = 'Pelanggaran: 0';
+            
+            // Reset timer display
+            document.getElementById('timerDisplay').style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+            
+            console.log('Aplikasi direset - Siap untuk ujian baru');
+        }
+
+        // ================================
+        // EVENT LISTENERS UNTUK UNLOCK
+        // ================================
+        document.addEventListener('keypress', function(e) {
+            if (isBlocked && e.key === 'Enter') {
+                unlockApp();
+            }
+        });
+
+        // Prevent copy-paste in unlock input
+        document.getElementById('unlockInput').addEventListener('paste', function(e) {
+            e.preventDefault();
+        });
+
+        console.log('Sistem ujian online siap - Konfigurasi dimuat');
+    </script>
+</body>
+</html>
